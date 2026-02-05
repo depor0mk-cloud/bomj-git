@@ -2,197 +2,154 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>БОМЖ-РПГ: БЕСКОНЕЧНОСТЬ</title>
+    <title>BOMZH VS ZOMBIE: INFINITY</title>
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: 'Courier New', monospace; text-align: center; padding: 10px; }
-        .game-window { background: #1e1e1e; border: 4px solid #333; border-radius: 20px; width: 360px; margin: 0 auto; padding: 20px; box-shadow: 0 0 30px rgba(0,255,136,0.1); }
+        body { background: #0a0a0a; color: #eee; font-family: 'Arial', sans-serif; text-align: center; user-select: none; }
+        .game-window { background: #1a1a1a; border: 3px solid #333; border-radius: 20px; width: 350px; margin: 20px auto; padding: 20px; box-shadow: 0 0 20px rgba(255,0,0,0.2); }
         
-        .header { font-size: 24px; color: #00ff88; text-shadow: 0 0 10px #00ff88; margin-bottom: 10px; }
-        .enemy-box { background: #252525; border-radius: 15px; padding: 15px; margin: 10px 0; border: 1px solid #444; }
-        .enemy-icon { font-size: 70px; height: 90px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        .header { font-size: 22px; color: #ff4444; font-weight: bold; margin-bottom: 15px; }
         
-        .bar { width: 100%; height: 15px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #000; margin: 5px 0; }
-        .fill-hp { height: 100%; background: linear-gradient(90deg, #ff416c, #ff4b2b); width: 100%; transition: 0.1s; }
-        .fill-player { height: 100%; background: linear-gradient(90deg, #00d2ff, #3a7bd5); width: 100%; }
+        /* Зомби зона */
+        .zombie-box { background: #222; border-radius: 15px; padding: 15px; border: 1px solid #444; margin-bottom: 15px; }
+        .zombie-icon { font-size: 80px; height: 100px; display: flex; align-items: center; justify-content: center; }
+        
+        .bar { width: 100%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; margin: 5px 0; border: 1px solid #000; }
+        .fill-red { height: 100%; background: #ff0000; width: 100%; }
+        .fill-blue { height: 100%; background: #0088ff; width: 100%; }
 
+        /* Кнопка удара БЕЗ КД */
         .hit-btn { 
-            background: #00ff88; color: #000; border: none; padding: 18px; width: 100%; 
-            font-size: 22px; font-weight: bold; border-radius: 12px; cursor: pointer;
-            box-shadow: 0 5px 0 #009955; margin-bottom: 15px;
+            background: linear-gradient(#ff6600, #992200); color: white; border: none; padding: 20px; width: 100%; 
+            font-size: 24px; font-weight: bold; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 5px 0 #661100; margin-bottom: 20px;
         }
-        .hit-btn:active { transform: translateY(4px); box-shadow: none; }
+        .hit-btn:active { transform: translateY(3px); box-shadow: none; }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 14px; }
-        .stat-card { background: #2a2a2a; padding: 8px; border-radius: 8px; border: 1px solid #333; }
-        .val { display: block; color: #00ff88; font-size: 18px; font-weight: bold; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-item { background: #252525; padding: 10px; border-radius: 8px; font-size: 14px; }
+        .stat-item b { color: #00ff88; font-size: 16px; display: block; }
 
-        .shop { text-align: left; background: #252525; padding: 10px; border-radius: 10px; }
-        .shop-title { font-size: 12px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        .buy-btn { 
-            width: 100%; padding: 10px; margin: 4px 0; cursor: pointer; 
+        /* Магазин */
+        .shop { text-align: left; background: #222; padding: 10px; border-radius: 10px; border: 1px solid #333; }
+        .shop-btn { 
+            width: 100%; padding: 10px; margin: 5px 0; cursor: pointer; 
             background: #333; color: white; border: 1px solid #555; border-radius: 6px;
             display: flex; justify-content: space-between; font-size: 13px;
         }
-        .buy-btn:hover:not(:disabled) { border-color: #00ff88; background: #3a3a3a; }
-        .buy-btn:disabled { opacity: 0.3; filter: grayscale(1); }
-
-        .prestige-btn { background: #ff4444 !important; margin-top: 15px; color: white !important; box-shadow: 0 5px 0 #990000 !important; }
+        .shop-btn:disabled { opacity: 0.3; }
+        .prestige { background: #ff0000 !important; color: white; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="game-window">
-    <div class="header">BOMZH INFINITY</div>
+    <div class="header">ZOMBIE APOCALYPSE</div>
     
-    <div class="enemy-box">
-        <div id="e-name" style="font-size: 14px; color: #ff4444;">ДВОРНИК (УР. 1)</div>
-        <div id="e-sprite" class="enemy-icon">🧹</div>
-        <div class="bar"><div id="e-hp-fill" class="fill-hp"></div></div>
+    <div class="zombie-box">
+        <div id="z-name" style="color: #ff4444; font-size: 14px;">Гнилой зомби</div>
+        <div id="z-icon" class="zombie-icon">🧟</div>
+        <div style="font-size: 10px;">HP Зомби</div>
+        <div class="bar"><div id="z-hp" class="fill-red"></div></div>
     </div>
 
-    <button class="hit-btn" onclick="doHit()">УДАРИТЬ!</button>
+    <button class="hit-btn" onmousedown="hit()">УДАРИТЬ!</button>
 
-    <div class="stats-grid">
-        <div class="stat-card">Бутылки <span id="m-bottles" class="val">0</span></div>
-        <div class="stat-card">Урон <span id="m-dmg" class="val">2</span></div>
-        <div class="stat-card">Множитель <span id="m-mult" class="val">x1</span></div>
-        <div class="stat-card">Твоё ХП <div class="bar" style="height:8px"><div id="p-hp-fill" class="fill-player"></div></div></div>
+    <div class="stats">
+        <div class="stat-item">Бутылки <b id="m-money">0</b></div>
+        <div class="stat-item">Урон <b id="m-dmg">2</b></div>
+        <div class="stat-item">Множитель <b id="m-mult">x1</b></div>
+        <div class="stat-item">Твоё HP <div class="bar" style="height:6px;"><div id="p-hp" class="fill-blue"></div></div></div>
     </div>
 
     <div class="shop">
-        <div class="shop-title">Улучшения</div>
-        <button id="b-wep" class="buy-btn" onclick="buy('wep')"><span>🥊 Кастет (+5 урон)</span> <b id="c-wep">30 🍾</b></button>
-        <button id="b-auto" class="buy-btn" onclick="buy('auto')"><span>🤝 Кореш (Авто-удар)</span> <b id="c-auto">100 🍾</b></button>
-        <button id="b-heal" class="buy-btn" onclick="buy('heal')"><span>🥙 Шаурма (Хил)</span> <b>15 🍾</b></button>
-        
-        <button id="b-prestige" class="buy-btn prestige-btn" onclick="doPrestige()" style="display:none">
-            <span>☣️ ПЕРЕРОЖДЕНИЕ</span> <b>+1 к множителю</b>
-        </button>
+        <button id="s-wep" class="shop-btn" onclick="buy('wep')"><span>🔪 Нож (+5 урон)</span> <b id="c-wep">30</b></button>
+        <button id="s-auto" class="shop-btn" onclick="buy('auto')"><span>🤝 Кореш (Авто)</span> <b id="c-auto">100</b></button>
+        <button id="s-heal" class="shop-btn" onclick="buy('heal')"><span>🥙 Шаурма (Хил)</span> <b>15</b></button>
+        <button id="s-prestige" class="shop-btn prestige" onclick="prestige()" style="display:none;">ПЕРЕРОЖДЕНИЕ (x2 бонус)</button>
     </div>
 </div>
 
 <script>
-    // ИНИЦИАЛИЗАЦИЯ ДАННЫХ (Загрузка из памяти)
-    let save = JSON.parse(localStorage.getItem('bomzh_infinity_save')) || {
-        bottles: 0,
-        dmg: 2,
-        multiplier: 1,
-        autoDmg: 0,
-        lvl: 1,
-        costWep: 30,
-        costAuto: 100
+    // Загрузка или старт
+    let state = JSON.parse(localStorage.getItem('zombie_save')) || {
+        money: 0, dmg: 2, mult: 1, auto: 0, lvl: 1, cWep: 30, cAuto: 100
     };
 
-    let pMaxHP = 100;
-    let pCurHP = 100;
-    let eMaxHP = 15;
-    let eCurHP = 15;
-    let eDmg = 2;
-    const icons = ["🧹", "📦", "🔦", "👮", "🥊", "👹", "🤡", "🤖", "🏢"];
+    let pHP = 100, zHP = 15, zMax = 15, zDmg = 2;
+    const zIcons = ["🧟", "🧛", "🧟‍♂️", "🧟‍♀️"];
 
-    // Таймер врага (бьет тебя)
+    // Враг бьет тебя
     setInterval(() => {
-        pCurHP -= eDmg;
-        if (pCurHP <= 0) {
-            alert("Тебя побили! Ты потерял 20% бутылок.");
-            save.bottles = Math.floor(save.bottles * 0.8);
-            pCurHP = pMaxHP;
+        pHP -= zDmg;
+        if (pHP <= 0) {
+            alert("Зомби тебя загрызли! Потерял 20% бутылок.");
+            state.money *= 0.8;
+            pHP = 100;
         }
-        updateUI();
+        ui();
     }, 1500);
 
-    // Таймер авто-удара (кореш)
+    // Авто-удар кореша
     setInterval(() => {
-        if (save.autoDmg > 0) {
-            dealDamage(save.autoDmg * save.multiplier);
-        }
+        if (state.auto > 0) damage(state.auto * state.mult);
     }, 1000);
 
-    function doHit() {
-        dealDamage(save.dmg * save.multiplier);
-        const s = document.getElementById('e-sprite');
-        s.style.transform = "scale(0.8) translateY(10px)";
-        setTimeout(() => s.style.transform = "none", 50);
+    // УДАР БЕЗ КД
+    function hit() {
+        damage(state.dmg * state.mult);
+        let s = document.getElementById('z-icon');
+        s.style.transform = "scale(0.8)";
+        setTimeout(() => s.style.transform = "scale(1)", 30);
     }
 
-    function dealDamage(amount) {
-        eCurHP -= amount;
-        if (eCurHP <= 0) {
-            save.bottles += Math.ceil(save.lvl * 5 * save.multiplier);
-            save.lvl++;
-            spawnEnemy();
+    function damage(val) {
+        zHP -= val;
+        if (zHP <= 0) {
+            state.money += state.lvl * 5 * state.mult;
+            state.lvl++;
+            newZombie();
         }
-        updateUI();
+        ui();
     }
 
-    function spawnEnemy() {
-        eMaxHP = Math.floor(15 * Math.pow(1.3, save.lvl));
-        eCurHP = eMaxHP;
-        eDmg = Math.floor(2 * Math.pow(1.2, save.lvl));
+    function newZombie() {
+        zMax = Math.floor(15 * Math.pow(1.3, state.lvl));
+        zHP = zMax;
+        zDmg = Math.floor(2 * Math.pow(1.2, state.lvl));
+        document.getElementById('z-icon').innerText = zIcons[Math.floor(Math.random() * zIcons.length)];
+        document.getElementById('z-name').innerText = "Зомби Ур. " + state.lvl;
+    }
+
+    function buy(t) {
+        if (t=='wep' && state.money >= state.cWep) {
+            state.money -= state.cWep; state.dmg += 5; state.cWep = Math.floor(state.cWep * 1.5);
+        }
+        if (t=='auto' && state.money >= state.cAuto) {
+            state.money -= state.cAuto; state.auto += 2; state.cAuto = Math.floor(state.cAuto * 1.7);
+        }
+        if (t=='heal' && state.money >= 15) {
+            state.money -= 15; pHP = 100;
+        }
+        ui();
+    }
+
+    function prestige() {
+        if (state.money >= 500) {
+            state.mult++; state.money = 0; state.dmg = 2; state.auto = 0; state.lvl = 1;
+            state.cWep = 30; state.cAuto = 100; pHP = 100;
+            newZombie(); ui();
+        }
+    }
+
+    function ui() {
+        document.getElementById('m-money').innerText = Math.floor(state.money);
+        document.getElementById('m-dmg').innerText = state.dmg;
+        document.getElementById('m-mult').innerText = "x" + state.mult;
+        document.getElementById('z-hp').style.width = (zHP/zMax*100) + "%";
+        document.getElementById('p-hp').style.width = pHP + "%";
+        document.getElementById('c-wep').innerText = state.cWep;
+        document.getElementById('c-auto').innerText = state.cAuto;
         
-        document.getElementById('e-name').innerText = `ВРАГ УР. ${save.lvl}`;
-        document.getElementById('e-sprite').innerText = icons[save.lvl % icons.length];
-    }
-
-    function buy(type) {
-        if (type === 'wep' && save.bottles >= save.costWep) {
-            save.bottles -= save.costWep;
-            save.dmg += 5;
-            save.costWep = Math.floor(save.costWep * 1.5);
-        }
-        if (type === 'auto' && save.bottles >= save.costAuto) {
-            save.bottles -= save.costAuto;
-            save.autoDmg += 2;
-            save.costAuto = Math.floor(save.costAuto * 1.7);
-        }
-        if (type === 'heal' && save.bottles >= 15) {
-            save.bottles -= 15;
-            pCurHP = pMaxHP;
-        }
-        updateUI();
-    }
-
-    function doPrestige() {
-        if (confirm("Переродиться? Ты потеряешь бутылки и урон, но получишь вечный множитель x" + (save.multiplier + 1))) {
-            save.multiplier += 1;
-            save.bottles = 0;
-            save.dmg = 2;
-            save.autoDmg = 0;
-            save.lvl = 1;
-            save.costWep = 30;
-            save.costAuto = 100;
-            pCurHP = pMaxHP;
-            spawnEnemy();
-            updateUI();
-        }
-    }
-
-    function updateUI() {
-        document.getElementById('m-bottles').innerText = Math.floor(save.bottles);
-        document.getElementById('m-dmg').innerText = save.dmg;
-        document.getElementById('m-mult').innerText = "x" + save.multiplier;
-        
-        document.getElementById('e-hp-fill').style.width = (eCurHP / eMaxHP * 100) + "%";
-        document.getElementById('p-hp-fill').style.width = (pCurHP / pMaxHP * 100) + "%";
-
-        document.getElementById('c-wep').innerText = save.costWep + " 🍾";
-        document.getElementById('c-auto').innerText = save.costAuto + " 🍾";
-
-        document.getElementById('b-wep').disabled = save.bottles < save.costWep;
-        document.getElementById('b-auto').disabled = save.bottles < save.costAuto;
-        document.getElementById('b-heal').disabled = save.bottles < 15;
-
-        // Показать кнопку престижа, если много бутылок
-        document.getElementById('b-prestige').style.display = save.bottles >= 500 ? "flex" : "none";
-
-        // Сохранение в LocalStorage
-        localStorage.setItem('bomzh_infinity_save', JSON.stringify(save));
-    }
-
-    // Инициализация при старте
-    spawnEnemy();
-    updateUI();
-</script>
-
-</body>
-</html>
+        document.getElementById('s-wep').disabled = state.money < state.cWep;
+        document.getElementById('s-auto').disabled = state.money < state.cAuto;
+        document.getElementById
