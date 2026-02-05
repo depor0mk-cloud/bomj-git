@@ -2,160 +2,196 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ИСПРАВЛЕННЫЙ БОМЖ-РПГ</title>
+    <title>БОМЖ-РПГ: БЕСКОНЕЧНОСТЬ</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .game-card { background: #222; border: 3px solid #444; border-radius: 15px; width: 320px; margin: 0 auto; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        body { background: #121212; color: #e0e0e0; font-family: 'Courier New', monospace; text-align: center; padding: 10px; }
+        .game-window { background: #1e1e1e; border: 4px solid #333; border-radius: 20px; width: 360px; margin: 0 auto; padding: 20px; box-shadow: 0 0 30px rgba(0,255,136,0.1); }
         
-        /* Полоски жизни */
-        .bar-bg { width: 100%; height: 20px; background: #444; border-radius: 10px; margin: 10px 0; border: 1px solid #000; overflow: hidden; }
-        .bar-fill-red { height: 100%; background: #ff4444; width: 100%; transition: 0.1s; }
-        .bar-fill-blue { height: 100%; background: #0088ff; width: 100%; transition: 0.3s; }
+        .header { font-size: 24px; color: #00ff88; text-shadow: 0 0 10px #00ff88; margin-bottom: 10px; }
+        .enemy-box { background: #252525; border-radius: 15px; padding: 15px; margin: 10px 0; border: 1px solid #444; }
+        .enemy-icon { font-size: 70px; height: 90px; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        
+        .bar { width: 100%; height: 15px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #000; margin: 5px 0; }
+        .fill-hp { height: 100%; background: linear-gradient(90deg, #ff416c, #ff4b2b); width: 100%; transition: 0.1s; }
+        .fill-player { height: 100%; background: linear-gradient(90deg, #00d2ff, #3a7bd5); width: 100%; }
 
-        .enemy-icon { font-size: 80px; margin: 20px 0; transition: 0.1s; }
-        
-        /* Главная кнопка */
         .hit-btn { 
-            background: #ffcc00; color: black; border: none; padding: 15px 0; width: 100%; 
-            font-size: 22px; font-weight: bold; border-radius: 10px; cursor: pointer;
-            box-shadow: 0 4px 0 #b38f00;
+            background: #00ff88; color: #000; border: none; padding: 18px; width: 100%; 
+            font-size: 22px; font-weight: bold; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 5px 0 #009955; margin-bottom: 15px;
         }
         .hit-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        .stats { display: flex; justify-content: space-around; margin: 20px 0; font-size: 18px; color: #00ff88; }
-        
-        .shop-box { border-top: 1px solid #444; padding-top: 15px; text-align: left; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 14px; }
+        .stat-card { background: #2a2a2a; padding: 8px; border-radius: 8px; border: 1px solid #333; }
+        .val { display: block; color: #00ff88; font-size: 18px; font-weight: bold; }
+
+        .shop { text-align: left; background: #252525; padding: 10px; border-radius: 10px; }
+        .shop-title { font-size: 12px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
         .buy-btn { 
-            width: 100%; padding: 10px; margin: 5px 0; cursor: pointer; 
-            background: #333; color: white; border: 1px solid #555; border-radius: 5px;
-            display: flex; justify-content: space-between;
+            width: 100%; padding: 10px; margin: 4px 0; cursor: pointer; 
+            background: #333; color: white; border: 1px solid #555; border-radius: 6px;
+            display: flex; justify-content: space-between; font-size: 13px;
         }
-        .buy-btn:hover:not(:disabled) { background: #444; border-color: #00ff88; }
-        .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .buy-btn:hover:not(:disabled) { border-color: #00ff88; background: #3a3a3a; }
+        .buy-btn:disabled { opacity: 0.3; filter: grayscale(1); }
+
+        .prestige-btn { background: #ff4444 !important; margin-top: 15px; color: white !important; box-shadow: 0 5px 0 #990000 !important; }
     </style>
 </head>
 <body>
 
-    <div class="game-card">
-        <div id="enemy-name" style="color: #ff4444; font-weight: bold;">ДВОРНИК (Ур. 1)</div>
-        <div id="enemy-sprite" class="enemy-icon">🧹</div>
-        
-        <div style="font-size: 12px;">Жизнь врага:</div>
-        <div class="bar-bg"><div id="enemy-hp-fill" class="bar-fill-red"></div></div>
-
-        <button class="hit-btn" onclick="doHit()">УДАРИТЬ!</button>
-
-        <div class="stats">
-            <div>🍾 <span id="money">0</span></div>
-            <div>💪 <span id="dmg">2</span></div>
-        </div>
-
-        <div style="font-size: 12px;">Твоя жизнь:</div>
-        <div class="bar-bg"><div id="player-hp-fill" class="bar-fill-blue"></div></div>
-
-        <div class="shop-box">
-            <button id="btn-wep" class="buy-btn" onclick="buyWeapon()">
-                <span>🥊 Перчатки (+3 урона)</span> <b>20 🍾</b>
-            </button>
-            <button id="btn-heal" class="buy-btn" onclick="buyHeal()">
-                <span>🥙 Шаурма (Хил)</span> <b>10 🍾</b>
-            </button>
-        </div>
+<div class="game-window">
+    <div class="header">BOMZH INFINITY</div>
+    
+    <div class="enemy-box">
+        <div id="e-name" style="font-size: 14px; color: #ff4444;">ДВОРНИК (УР. 1)</div>
+        <div id="e-sprite" class="enemy-icon">🧹</div>
+        <div class="bar"><div id="e-hp-fill" class="fill-hp"></div></div>
     </div>
 
-<script>
-    // Базовые переменные
-    let bottles = 0;
-    let myDmg = 2;
-    let myHP = 100;
-    
-    let currentEnemyLvl = 0;
-    const enemies = [
-        {name: "ДВОРНИК", icon: "🧹", hp: 15, dmg: 3},
-        {name: "КУРЬЕР", icon: "📦", hp: 50, dmg: 7},
-        {name: "ОХРАННИК", icon: "🔦", hp: 120, dmg: 12},
-        {name: "МЕНТ", icon: "👮", hp: 300, dmg: 20}
-    ];
+    <button class="hit-btn" onclick="doHit()">УДАРИТЬ!</button>
 
-    let enemyMaxHP = enemies[0].hp;
-    let enemyCurHP = enemyMaxHP;
+    <div class="stats-grid">
+        <div class="stat-card">Бутылки <span id="m-bottles" class="val">0</span></div>
+        <div class="stat-card">Урон <span id="m-dmg" class="val">2</span></div>
+        <div class="stat-card">Множитель <span id="m-mult" class="val">x1</span></div>
+        <div class="stat-card">Твоё ХП <div class="bar" style="height:8px"><div id="p-hp-fill" class="fill-player"></div></div></div>
+    </div>
 
-    // Главная функция удара
-    function doHit() {
-        // Урон врагу
-        enemyCurHP -= myDmg;
+    <div class="shop">
+        <div class="shop-title">Улучшения</div>
+        <button id="b-wep" class="buy-btn" onclick="buy('wep')"><span>🥊 Кастет (+5 урон)</span> <b id="c-wep">30 🍾</b></button>
+        <button id="b-auto" class="buy-btn" onclick="buy('auto')"><span>🤝 Кореш (Авто-удар)</span> <b id="c-auto">100 🍾</b></button>
+        <button id="b-heal" class="buy-btn" onclick="buy('heal')"><span>🥙 Шаурма (Хил)</span> <b>15 🍾</b></button>
         
-        // Анимация врага
-        const sprite = document.getElementById('enemy-sprite');
-        sprite.style.transform = "scale(0.8) rotate(10deg)";
-        setTimeout(() => sprite.style.transform = "scale(1) rotate(0deg)", 100);
+        <button id="b-prestige" class="buy-btn prestige-btn" onclick="doPrestige()" style="display:none">
+            <span>☣️ ПЕРЕРОЖДЕНИЕ</span> <b>+1 к множителю</b>
+        </button>
+    </div>
+</div>
 
-        if (enemyCurHP <= 0) {
-            bottles += (currentEnemyLvl + 1) * 10;
-            spawnNextEnemy();
-        }
-        refreshUI();
-    }
+<script>
+    // ИНИЦИАЛИЗАЦИЯ ДАННЫХ (Загрузка из памяти)
+    let save = JSON.parse(localStorage.getItem('bomzh_infinity_save')) || {
+        bottles: 0,
+        dmg: 2,
+        multiplier: 1,
+        autoDmg: 0,
+        lvl: 1,
+        costWep: 30,
+        costAuto: 100
+    };
 
-    // Враг бьет тебя раз в 1.5 секунды
+    let pMaxHP = 100;
+    let pCurHP = 100;
+    let eMaxHP = 15;
+    let eCurHP = 15;
+    let eDmg = 2;
+    const icons = ["🧹", "📦", "🔦", "👮", "🥊", "👹", "🤡", "🤖", "🏢"];
+
+    // Таймер врага (бьет тебя)
     setInterval(() => {
-        if (enemyCurHP > 0) {
-            myHP -= enemies[currentEnemyLvl].dmg;
-            if (myHP <= 0) {
-                alert("Тебя вырубили! Ты потерял часть бутылок.");
-                bottles = Math.floor(bottles / 2);
-                myHP = 100;
-                currentEnemyLvl = 0;
-                spawnNextEnemy();
-            }
-            refreshUI();
+        pCurHP -= eDmg;
+        if (pCurHP <= 0) {
+            alert("Тебя побили! Ты потерял 20% бутылок.");
+            save.bottles = Math.floor(save.bottles * 0.8);
+            pCurHP = pMaxHP;
         }
+        updateUI();
     }, 1500);
 
-    function spawnNextEnemy() {
-        currentEnemyLvl++;
-        if (currentEnemyLvl >= enemies.length) {
-            alert("ТЫ КОРОЛЬ РАЙОНА! Всех победил.");
-            currentEnemyLvl = 0;
-            myDmg += 5; // Бонус за прохождение
+    // Таймер авто-удара (кореш)
+    setInterval(() => {
+        if (save.autoDmg > 0) {
+            dealDamage(save.autoDmg * save.multiplier);
         }
-        enemyMaxHP = enemies[currentEnemyLvl].hp;
-        enemyCurHP = enemyMaxHP;
-        document.getElementById('enemy-sprite').innerText = enemies[currentEnemyLvl].icon;
-        document.getElementById('enemy-name').innerText = enemies[currentEnemyLvl].name + " (Ур. " + (currentEnemyLvl+1) + ")";
+    }, 1000);
+
+    function doHit() {
+        dealDamage(save.dmg * save.multiplier);
+        const s = document.getElementById('e-sprite');
+        s.style.transform = "scale(0.8) translateY(10px)";
+        setTimeout(() => s.style.transform = "none", 50);
     }
 
-    function buyWeapon() {
-        if (bottles >= 20) {
-            bottles -= 20;
-            myDmg += 3;
-            refreshUI();
+    function dealDamage(amount) {
+        eCurHP -= amount;
+        if (eCurHP <= 0) {
+            save.bottles += Math.ceil(save.lvl * 5 * save.multiplier);
+            save.lvl++;
+            spawnEnemy();
         }
+        updateUI();
     }
 
-    function buyHeal() {
-        if (bottles >= 10) {
-            bottles -= 10;
-            myHP = 100;
-            refreshUI();
-        }
-    }
-
-    function refreshUI() {
-        document.getElementById('money').innerText = bottles;
-        document.getElementById('dmg').innerText = myDmg;
+    function spawnEnemy() {
+        eMaxHP = Math.floor(15 * Math.pow(1.3, save.lvl));
+        eCurHP = eMaxHP;
+        eDmg = Math.floor(2 * Math.pow(1.2, save.lvl));
         
-        // Полоски
-        document.getElementById('enemy-hp-fill').style.width = Math.max(0, (enemyCurHP / enemyMaxHP) * 100) + "%";
-        document.getElementById('player-hp-fill').style.width = Math.max(0, (myHP / 100) * 100) + "%";
-
-        // Кнопки магазина
-        document.getElementById('btn-wep').disabled = (bottles < 20);
-        document.getElementById('btn-heal').disabled = (bottles < 10);
+        document.getElementById('e-name').innerText = `ВРАГ УР. ${save.lvl}`;
+        document.getElementById('e-sprite').innerText = icons[save.lvl % icons.length];
     }
 
-    // Запуск первой отрисовки
-    refreshUI();
+    function buy(type) {
+        if (type === 'wep' && save.bottles >= save.costWep) {
+            save.bottles -= save.costWep;
+            save.dmg += 5;
+            save.costWep = Math.floor(save.costWep * 1.5);
+        }
+        if (type === 'auto' && save.bottles >= save.costAuto) {
+            save.bottles -= save.costAuto;
+            save.autoDmg += 2;
+            save.costAuto = Math.floor(save.costAuto * 1.7);
+        }
+        if (type === 'heal' && save.bottles >= 15) {
+            save.bottles -= 15;
+            pCurHP = pMaxHP;
+        }
+        updateUI();
+    }
+
+    function doPrestige() {
+        if (confirm("Переродиться? Ты потеряешь бутылки и урон, но получишь вечный множитель x" + (save.multiplier + 1))) {
+            save.multiplier += 1;
+            save.bottles = 0;
+            save.dmg = 2;
+            save.autoDmg = 0;
+            save.lvl = 1;
+            save.costWep = 30;
+            save.costAuto = 100;
+            pCurHP = pMaxHP;
+            spawnEnemy();
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('m-bottles').innerText = Math.floor(save.bottles);
+        document.getElementById('m-dmg').innerText = save.dmg;
+        document.getElementById('m-mult').innerText = "x" + save.multiplier;
+        
+        document.getElementById('e-hp-fill').style.width = (eCurHP / eMaxHP * 100) + "%";
+        document.getElementById('p-hp-fill').style.width = (pCurHP / pMaxHP * 100) + "%";
+
+        document.getElementById('c-wep').innerText = save.costWep + " 🍾";
+        document.getElementById('c-auto').innerText = save.costAuto + " 🍾";
+
+        document.getElementById('b-wep').disabled = save.bottles < save.costWep;
+        document.getElementById('b-auto').disabled = save.bottles < save.costAuto;
+        document.getElementById('b-heal').disabled = save.bottles < 15;
+
+        // Показать кнопку престижа, если много бутылок
+        document.getElementById('b-prestige').style.display = save.bottles >= 500 ? "flex" : "none";
+
+        // Сохранение в LocalStorage
+        localStorage.setItem('bomzh_infinity_save', JSON.stringify(save));
+    }
+
+    // Инициализация при старте
+    spawnEnemy();
+    updateUI();
 </script>
 
 </body>
