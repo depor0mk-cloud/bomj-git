@@ -2,110 +2,105 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>BOMZH VS ZOMBIE: INFINITY</title>
+    <title>ZOMBIE APOCALYPSE: BALANCED</title>
     <style>
-        body { background: #0a0a0a; color: #eee; font-family: 'Arial', sans-serif; text-align: center; user-select: none; }
-        .game-window { background: #1a1a1a; border: 3px solid #333; border-radius: 20px; width: 350px; margin: 20px auto; padding: 20px; box-shadow: 0 0 20px rgba(255,0,0,0.2); }
+        body { background: #0a0a0a; color: #eee; font-family: 'Segoe UI', sans-serif; text-align: center; user-select: none; }
+        .game-window { background: #1a1a1a; border: 3px solid #444; border-radius: 20px; width: 350px; margin: 10px auto; padding: 15px; box-shadow: 0 0 25px rgba(255,0,0,0.3); }
+        .header { font-size: 22px; color: #ff4444; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
         
-        .header { font-size: 22px; color: #ff4444; font-weight: bold; margin-bottom: 15px; }
-        
-        /* Зомби зона */
-        .zombie-box { background: #222; border-radius: 15px; padding: 15px; border: 1px solid #444; margin-bottom: 15px; }
+        .zombie-box { background: #222; border-radius: 15px; padding: 10px; border: 1px solid #333; margin-bottom: 15px; }
         .zombie-icon { font-size: 80px; height: 100px; display: flex; align-items: center; justify-content: center; }
         
-        .bar { width: 100%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; margin: 5px 0; border: 1px solid #000; }
-        .fill-red { height: 100%; background: #ff0000; width: 100%; }
-        .fill-blue { height: 100%; background: #0088ff; width: 100%; }
+        .bar { width: 100%; height: 14px; background: #333; border-radius: 7px; overflow: hidden; margin: 5px 0; border: 1px solid #000; }
+        .fill-red { height: 100%; background: linear-gradient(90deg, #ff0000, #990000); width: 100%; transition: 0.05s; }
+        .fill-blue { height: 100%; background: linear-gradient(90deg, #0088ff, #0044ff); width: 100%; }
 
-        /* Кнопка удара БЕЗ КД */
         .hit-btn { 
-            background: linear-gradient(#ff6600, #992200); color: white; border: none; padding: 20px; width: 100%; 
+            background: linear-gradient(#ff4444, #660000); color: white; border: none; padding: 15px; width: 100%; 
             font-size: 24px; font-weight: bold; border-radius: 12px; cursor: pointer;
-            box-shadow: 0 5px 0 #661100; margin-bottom: 20px;
+            box-shadow: 0 5px 0 #330000; margin-bottom: 15px;
         }
         .hit-btn:active { transform: translateY(3px); box-shadow: none; }
 
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .stat-item { background: #252525; padding: 10px; border-radius: 8px; font-size: 14px; }
+        .stat-item { background: #252525; padding: 8px; border-radius: 8px; font-size: 13px; }
         .stat-item b { color: #00ff88; font-size: 16px; display: block; }
 
-        /* Магазин */
         .shop { text-align: left; background: #222; padding: 10px; border-radius: 10px; border: 1px solid #333; }
         .shop-btn { 
-            width: 100%; padding: 10px; margin: 5px 0; cursor: pointer; 
+            width: 100%; padding: 8px; margin: 4px 0; cursor: pointer; 
             background: #333; color: white; border: 1px solid #555; border-radius: 6px;
             display: flex; justify-content: space-between; font-size: 13px;
         }
         .shop-btn:disabled { opacity: 0.3; }
-        .prestige { background: #ff0000 !important; color: white; font-weight: bold; margin-top: 10px; }
+        .prestige { background: #ffaa00 !important; color: black; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 0 #996600; }
     </style>
 </head>
 <body>
 
 <div class="game-window">
-    <div class="header">ZOMBIE APOCALYPSE</div>
+    <div class="header">ZOMBIE SMASH</div>
     
     <div class="zombie-box">
-        <div id="z-name" style="color: #ff4444; font-size: 14px;">Гнилой зомби</div>
+        <div id="z-name" style="color: #ff4444; font-size: 14px; font-weight: bold;">Зомби-Слабак</div>
         <div id="z-icon" class="zombie-icon">🧟</div>
-        <div style="font-size: 10px;">HP Зомби</div>
         <div class="bar"><div id="z-hp" class="fill-red"></div></div>
     </div>
 
     <button class="hit-btn" onmousedown="hit()">УДАРИТЬ!</button>
 
     <div class="stats">
-        <div class="stat-item">Бутылки <b id="m-money">0</b></div>
-        <div class="stat-item">Урон <b id="m-dmg">2</b></div>
-        <div class="stat-item">Множитель <b id="m-mult">x1</b></div>
-        <div class="stat-item">Твоё HP <div class="bar" style="height:6px;"><div id="p-hp" class="fill-blue"></div></div></div>
+        <div class="stat-item">🍾 Бутылки <b id="m-money">0</b></div>
+        <div class="stat-item">💪 Урон <b id="m-dmg">2</b></div>
+        <div class="stat-item">⚡ Множ. <b id="m-mult">x1</b></div>
+        <div class="stat-item">❤️ Твоё HP <div class="bar" style="height:6px;"><div id="p-hp" class="fill-blue"></div></div></div>
     </div>
 
     <div class="shop">
-        <button id="s-wep" class="shop-btn" onclick="buy('wep')"><span>🔪 Нож (+5 урон)</span> <b id="c-wep">30</b></button>
-        <button id="s-auto" class="shop-btn" onclick="buy('auto')"><span>🤝 Кореш (Авто)</span> <b id="c-auto">100</b></button>
+        <button id="s-wep" class="shop-btn" onclick="buy('wep')"><span>🥊 Кастет (+8 урон)</span> <b id="c-wep">30</b></button>
+        <button id="s-auto" class="shop-btn" onclick="buy('auto')"><span>🤝 Кореш (Авто-удар)</span> <b id="c-auto">100</b></button>
         <button id="s-heal" class="shop-btn" onclick="buy('heal')"><span>🥙 Шаурма (Хил)</span> <b>15</b></button>
-        <button id="s-prestige" class="shop-btn prestige" onclick="prestige()" style="display:none;">ПЕРЕРОЖДЕНИЕ (x2 бонус)</button>
+        <button id="s-prestige" class="shop-btn prestige" onclick="prestige()" style="display:none;">ПЕРЕРОЖДЕНИЕ (x2 БОНУС)</button>
     </div>
 </div>
 
 <script>
-    // Загрузка или старт
-    let state = JSON.parse(localStorage.getItem('zombie_save')) || {
+    let state = JSON.parse(localStorage.getItem('zombie_v3_save')) || {
         money: 0, dmg: 2, mult: 1, auto: 0, lvl: 1, cWep: 30, cAuto: 100
     };
 
-    let pHP = 100, zHP = 15, zMax = 15, zDmg = 2;
-    const zIcons = ["🧟", "🧛", "🧟‍♂️", "🧟‍♀️"];
+    let pHP = 100, zHP = 15, zMax = 15, zDmg = 1;
+    
+    // 50+ РАЗНЫХ ЗОМБИ И МОНСТРОВ
+    const zIcons = ["🧟","🧛","🧟‍♂️","🧟‍♀️","💀","☠️","👻","👽","👹","👺","🎃","🤡","👽","👾","🤖","🕵️‍♂️","🧛‍♂️","🧛‍♀️","🧟","🧟‍♂️","🧟‍♀️","🧠","🦟","🕷️","🦂","🐀","🐺","🐗","🦍","🐉","🐲","🐊","🐍","🕴️","🤺","🦾","🦿","👣","🕯️","🩸","🧪","☣️","☢️","🌋","🌑","🧿","🔮","👺","🦹","🎭"];
 
-    // Враг бьет тебя
+    // Враг атакует (ДЕБАФФ: УРОН РАСТЕТ МЕДЛЕННЕЕ)
     setInterval(() => {
         pHP -= zDmg;
+        // Авто-хил если мало ХП и есть деньги
+        if (pHP < 20 && state.money >= 15) buy('heal');
+        
         if (pHP <= 0) {
-            alert("Зомби тебя загрызли! Потерял 20% бутылок.");
-            state.money *= 0.8;
-            pHP = 100;
+            alert("Тебя загрызли! Потерял 10% бутылок.");
+            state.money *= 0.9; pHP = 100;
         }
         ui();
     }, 1500);
 
-    // Авто-удар кореша
-    setInterval(() => {
-        if (state.auto > 0) damage(state.auto * state.mult);
-    }, 1000);
+    // Авто-удар
+    setInterval(() => { if (state.auto > 0) damage(state.auto * state.mult); }, 1000);
 
-    // УДАР БЕЗ КД
     function hit() {
         damage(state.dmg * state.mult);
         let s = document.getElementById('z-icon');
-        s.style.transform = "scale(0.8)";
-        setTimeout(() => s.style.transform = "scale(1)", 30);
+        s.style.transform = "scale(0.8) rotate(5deg)";
+        setTimeout(() => s.style.transform = "scale(1) rotate(0deg)", 30);
     }
 
     function damage(val) {
         zHP -= val;
         if (zHP <= 0) {
-            state.money += state.lvl * 5 * state.mult;
+            state.money += Math.ceil(state.lvl * 8 * state.mult);
             state.lvl++;
             newZombie();
         }
@@ -113,28 +108,31 @@
     }
 
     function newZombie() {
-        zMax = Math.floor(15 * Math.pow(1.3, state.lvl));
+        // ДЕБАФФ: ХП ЗОМБИ РАСТЕТ МЕДЛЕННЕЕ (было 1.3, стало 1.18)
+        zMax = Math.floor(15 * Math.pow(1.18, state.lvl));
         zHP = zMax;
-        zDmg = Math.floor(2 * Math.pow(1.2, state.lvl));
-        document.getElementById('z-icon').innerText = zIcons[Math.floor(Math.random() * zIcons.length)];
+        // ДЕБАФФ: УРОН ЗОМБИ РАСТЕТ МЕДЛЕННЕЕ (было 1.2, стало 1.1)
+        zDmg = Math.max(1, Math.floor(1 * Math.pow(1.1, state.lvl)));
+        
+        document.getElementById('z-icon').innerText = zIcons[state.lvl % zIcons.length];
         document.getElementById('z-name').innerText = "Зомби Ур. " + state.lvl;
     }
 
     function buy(t) {
         if (t=='wep' && state.money >= state.cWep) {
-            state.money -= state.cWep; state.dmg += 5; state.cWep = Math.floor(state.cWep * 1.5);
+            state.money -= state.cWep; state.dmg += 8; state.cWep = Math.round(state.cWep * 1.4);
         }
         if (t=='auto' && state.money >= state.cAuto) {
-            state.money -= state.cAuto; state.auto += 2; state.cAuto = Math.floor(state.cAuto * 1.7);
+            state.money -= state.cAuto; state.auto += 3; state.cAuto = Math.round(state.cAuto * 1.6);
         }
         if (t=='heal' && state.money >= 15) {
-            state.money -= 15; pHP = 100;
+            state.money -= 15; pHP = Math.min(100, pHP + 50);
         }
         ui();
     }
 
     function prestige() {
-        if (state.money >= 500) {
+        if (state.money >= 1000) {
             state.mult++; state.money = 0; state.dmg = 2; state.auto = 0; state.lvl = 1;
             state.cWep = 30; state.cAuto = 100; pHP = 100;
             newZombie(); ui();
@@ -152,4 +150,14 @@
         
         document.getElementById('s-wep').disabled = state.money < state.cWep;
         document.getElementById('s-auto').disabled = state.money < state.cAuto;
-        document.getElementById
+        document.getElementById('s-heal').disabled = state.money < 15;
+        document.getElementById('s-prestige').style.display = state.money >= 1000 ? "flex" : "none";
+        
+        localStorage.setItem('zombie_v3_save', JSON.stringify(state));
+    }
+
+    newZombie();
+    ui();
+</script>
+</body>
+</html>
