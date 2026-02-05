@@ -2,95 +2,161 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Бомж-РПГ: Ответный удар</title>
+    <title>ИСПРАВЛЕННЫЙ БОМЖ-РПГ</title>
     <style>
-        :root { --neon: #00ff88; --red: #ff4444; --blue: #00d4ff; }
-        body { background: #121212; color: white; font-family: sans-serif; display: flex; justify-content: center; padding-top: 30px; }
-        .game-window { background: #1e1e1e; border: 2px solid #333; border-radius: 15px; width: 380px; padding: 20px; text-align: center; position: relative; }
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .game-card { background: #222; border: 3px solid #444; border-radius: 15px; width: 320px; margin: 0 auto; padding: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         
-        /* Враг */
-        #job-tag { background: var(--red); color: white; padding: 2px 10px; border-radius: 5px; font-size: 14px; }
-        .sprite-area { height: 120px; font-size: 70px; display: flex; align-items: center; justify-content: center; margin: 10px 0; }
-        
-        /* Полоски HP */
-        .hp-label { font-size: 12px; text-align: left; margin-bottom: 3px; display: block; }
-        .hp-bar { width: 100%; height: 12px; background: #333; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid #000; }
-        #enemy-hp { height: 100%; width: 100%; background: var(--red); transition: 0.1s; }
-        #player-hp { height: 100%; width: 100%; background: var(--blue); transition: 0.3s; }
+        /* Полоски жизни */
+        .bar-bg { width: 100%; height: 20px; background: #444; border-radius: 10px; margin: 10px 0; border: 1px solid #000; overflow: hidden; }
+        .bar-fill-red { height: 100%; background: #ff4444; width: 100%; transition: 0.1s; }
+        .bar-fill-blue { height: 100%; background: #0088ff; width: 100%; transition: 0.3s; }
 
-        .btn-attack {
-            background: linear-gradient(180deg, #444, #111);
-            color: white; border: 2px solid var(--neon); padding: 15px;
-            font-size: 20px; cursor: pointer; border-radius: 10px; width: 100%;
-            font-weight: bold; transition: 0.1s;
+        .enemy-icon { font-size: 80px; margin: 20px 0; transition: 0.1s; }
+        
+        /* Главная кнопка */
+        .hit-btn { 
+            background: #ffcc00; color: black; border: none; padding: 15px 0; width: 100%; 
+            font-size: 22px; font-weight: bold; border-radius: 10px; cursor: pointer;
+            box-shadow: 0 4px 0 #b38f00;
         }
-        .btn-attack:active { transform: scale(0.95); background: var(--neon); color: black; }
+        .hit-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        .stats { display: flex; justify-content: space-between; margin: 15px 0; background: #252525; padding: 10px; border-radius: 8px; border: 1px inset #000; }
-        .stat-val { color: var(--neon); font-size: 18px; }
-
-        .shop-btn { background: #333; color: #eee; border: 1px solid #555; padding: 8px; margin-top: 5px; cursor: pointer; width: 100%; border-radius: 5px; display: flex; justify-content: space-between; font-size: 13px; }
-        .shop-btn:disabled { opacity: 0.3; }
+        .stats { display: flex; justify-content: space-around; margin: 20px 0; font-size: 18px; color: #00ff88; }
         
-        /* Анимация урона по игроку */
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); background: #400; }
-            50% { transform: translateX(5px); }
-            100% { transform: translateX(0); }
+        .shop-box { border-top: 1px solid #444; padding-top: 15px; text-align: left; }
+        .buy-btn { 
+            width: 100%; padding: 10px; margin: 5px 0; cursor: pointer; 
+            background: #333; color: white; border: 1px solid #555; border-radius: 5px;
+            display: flex; justify-content: space-between;
         }
-        .damage-player { animation: shake 0.2s; }
+        .buy-btn:hover:not(:disabled) { background: #444; border-color: #00ff88; }
+        .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-<div class="game-window" id="main-window">
-    <span id="job-tag">Дворник</span>
-    <div class="sprite-area" id="enemy-sprite">🧹</div>
-    
-    <span class="hp-label">Здоровье врага:</span>
-    <div class="hp-bar"><div id="enemy-hp"></div></div>
+    <div class="game-card">
+        <div id="enemy-name" style="color: #ff4444; font-weight: bold;">ДВОРНИК (Ур. 1)</div>
+        <div id="enemy-sprite" class="enemy-icon">🧹</div>
+        
+        <div style="font-size: 12px;">Жизнь врага:</div>
+        <div class="bar-bg"><div id="enemy-hp-fill" class="bar-fill-red"></div></div>
 
-    <button class="btn-attack" onclick="playerHit()">ЛУПИТЬ!</button>
+        <button class="hit-btn" onclick="doHit()">УДАРИТЬ!</button>
 
-    <div class="stats">
-        <div>🍾 <span id="money" class="stat-val">0</span></div>
-        <div>💪 Сила: <span id="dmg" class="stat-val">1</span></div>
+        <div class="stats">
+            <div>🍾 <span id="money">0</span></div>
+            <div>💪 <span id="dmg">2</span></div>
+        </div>
+
+        <div style="font-size: 12px;">Твоя жизнь:</div>
+        <div class="bar-bg"><div id="player-hp-fill" class="bar-fill-blue"></div></div>
+
+        <div class="shop-box">
+            <button id="btn-wep" class="buy-btn" onclick="buyWeapon()">
+                <span>🥊 Перчатки (+3 урона)</span> <b>20 🍾</b>
+            </button>
+            <button id="btn-heal" class="buy-btn" onclick="buyHeal()">
+                <span>🥙 Шаурма (Хил)</span> <b>10 🍾</b>
+            </button>
+        </div>
     </div>
-
-    <span class="hp-label">Твоя выносливость:</span>
-    <div class="hp-bar"><div id="player-hp"></div></div>
-
-    <div style="text-align: left;">
-        <small style="color:#888">Рынок:</small>
-        <button id="wep1" class="shop-btn" onclick="buyWeapon(20, 3)"><span>🥊 Рваные перчатки</span><b>20 🍾</b></button>
-        <button id="heal" class="shop-btn" onclick="healPlayer()"><span>🥙 Шаурма (Лечит 50%)</span><b>10 🍾</b></button>
-    </div>
-</div>
 
 <script>
-    const enemyList = [
-        { name: "Дворник", icon: "🧹", hp: 15, dmg: 2 },
-        { name: "Курьер", icon: "📦", hp: 40, dmg: 5 },
-        { name: "Охранник", icon: "🔦", hp: 100, dmg: 10 },
-        { name: "Коллектор", icon: "👔", hp: 250, dmg: 20 }
+    // Базовые переменные
+    let bottles = 0;
+    let myDmg = 2;
+    let myHP = 100;
+    
+    let currentEnemyLvl = 0;
+    const enemies = [
+        {name: "ДВОРНИК", icon: "🧹", hp: 15, dmg: 3},
+        {name: "КУРЬЕР", icon: "📦", hp: 50, dmg: 7},
+        {name: "ОХРАННИК", icon: "🔦", hp: 120, dmg: 12},
+        {name: "МЕНТ", icon: "👮", hp: 300, dmg: 20}
     ];
 
-    let currentIdx = 0;
-    let bottles = 0;
-    let playerDmg = 2;
-    let playerMaxHP = 100;
-    let playerCurHP = 100;
-    let enemyMaxHP = enemyList[0].hp;
+    let enemyMaxHP = enemies[0].hp;
     let enemyCurHP = enemyMaxHP;
 
-    // Автоматическая атака врага каждые 1.5 секунды
+    // Главная функция удара
+    function doHit() {
+        // Урон врагу
+        enemyCurHP -= myDmg;
+        
+        // Анимация врага
+        const sprite = document.getElementById('enemy-sprite');
+        sprite.style.transform = "scale(0.8) rotate(10deg)";
+        setTimeout(() => sprite.style.transform = "scale(1) rotate(0deg)", 100);
+
+        if (enemyCurHP <= 0) {
+            bottles += (currentEnemyLvl + 1) * 10;
+            spawnNextEnemy();
+        }
+        refreshUI();
+    }
+
+    // Враг бьет тебя раз в 1.5 секунды
     setInterval(() => {
-        enemyHit();
+        if (enemyCurHP > 0) {
+            myHP -= enemies[currentEnemyLvl].dmg;
+            if (myHP <= 0) {
+                alert("Тебя вырубили! Ты потерял часть бутылок.");
+                bottles = Math.floor(bottles / 2);
+                myHP = 100;
+                currentEnemyLvl = 0;
+                spawnNextEnemy();
+            }
+            refreshUI();
+        }
     }, 1500);
 
-    function playerHit() {
-        enemyCurHP -= playerDmg;
-        const s = document.getElementById('enemy-sprite');
-        s.style.transform = "scale(0.8) rotate(15deg)";
-        setTimeout(() => s.style.transform = "none", 100);
+    function spawnNextEnemy() {
+        currentEnemyLvl++;
+        if (currentEnemyLvl >= enemies.length) {
+            alert("ТЫ КОРОЛЬ РАЙОНА! Всех победил.");
+            currentEnemyLvl = 0;
+            myDmg += 5; // Бонус за прохождение
+        }
+        enemyMaxHP = enemies[currentEnemyLvl].hp;
+        enemyCurHP = enemyMaxHP;
+        document.getElementById('enemy-sprite').innerText = enemies[currentEnemyLvl].icon;
+        document.getElementById('enemy-name').innerText = enemies[currentEnemyLvl].name + " (Ур. " + (currentEnemyLvl+1) + ")";
+    }
+
+    function buyWeapon() {
+        if (bottles >= 20) {
+            bottles -= 20;
+            myDmg += 3;
+            refreshUI();
+        }
+    }
+
+    function buyHeal() {
+        if (bottles >= 10) {
+            bottles -= 10;
+            myHP = 100;
+            refreshUI();
+        }
+    }
+
+    function refreshUI() {
+        document.getElementById('money').innerText = bottles;
+        document.getElementById('dmg').innerText = myDmg;
+        
+        // Полоски
+        document.getElementById('enemy-hp-fill').style.width = Math.max(0, (enemyCurHP / enemyMaxHP) * 100) + "%";
+        document.getElementById('player-hp-fill').style.width = Math.max(0, (myHP / 100) * 100) + "%";
+
+        // Кнопки магазина
+        document.getElementById('btn-wep').disabled = (bottles < 20);
+        document.getElementById('btn-heal').disabled = (bottles < 10);
+    }
+
+    // Запуск первой отрисовки
+    refreshUI();
+</script>
+
+</body>
+</html>
