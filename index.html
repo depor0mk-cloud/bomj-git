@@ -1,115 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Бомж-РПГ: Битва за бутылки</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOMZH CLICKER 2026</title>
     <style>
-        body { background: #222; color: #fff; font-family: sans-serif; text-align: center; }
-        .game-container { margin-top: 50px; }
-        
-        /* Рисуем пиксельного персонажа (упрощенно) */
-        .char-box {
-            display: inline-block;
-            width: 60px; height: 80px;
-            border: 2px solid #555;
-            background: #444; position: relative;
-            margin: 20px; vertical-align: bottom;
+        :root {
+            --primary: #00ff88;
+            --bg: #1a1a1a;
+            --card: #252525;
+            --text: #e0e0e0;
         }
-        .hp-bar { width: 100%; height: 10px; background: red; position: absolute; top: -15px; }
-        .hp-fill { height: 100%; background: lime; width: 100%; transition: 0.2s; }
 
-        /* Стили кнопок */
-        button { 
-            padding: 10px 20px; font-size: 18px; cursor: pointer; 
-            background: orange; border: none; border-radius: 5px; 
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-        button:disabled { background: #555; cursor: not-allowed; }
-        .stats { font-size: 20px; color: yellow; margin-bottom: 20px; }
-        .shop { margin-top: 30px; border-top: 1px solid #555; padding-top: 20px; }
+
+        .game-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 350px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .stat-item span {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .stat-item strong {
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        /* Полоска HP */
+        .enemy-area {
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .hp-container {
+            width: 100%;
+            height: 12px;
+            background: #444;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        #hp-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            transition: width 0.1s ease;
+        }
+
+        #enemy-pic {
+            font-size: 60px;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+            transition: transform 0.1s;
+        }
+
+        /* Крутая кнопка */
+        .btn-hit {
+            background: linear-gradient(135deg, #00ff88 0%, #00bd65 100%);
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            color: #000;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+            transition: all 0.2s;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn-hit:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0, 255, 136, 0.2);
+        }
+
+        .shop {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .shop-item {
+            background: #333;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .shop-item:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .shop-item:hover:not(:disabled) {
+            background: #444;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Бомж-РПГ: Путь Короля Свалки</h1>
+<div class="game-card">
+    <div class="stats-grid">
+        <div class="stat-item"><span>Бутылки</span><strong id="money">0</strong></div>
+        <div class="stat-item"><span>Урон</span><strong id="dmg">1</strong></div>
+    </div>
     
-    <div class="stats">
-        Уровень: <span id="lvl">1</span> | 
-        Бутылки: <span id="money">0</span> 🍾 | 
-        Урон: <span id="dmg">1</span>
-    </div>
-
-    <div class="game-container">
-        <div class="char-box">
-            <div style="font-size: 40px;">🧥</div>
-            <div>ГГ</div>
-        </div>
-
-        <span style="font-size: 30px;">VS</span>
-
-        <div class="char-box">
-            <div id="enemy-hp-bar" class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
-            <div id="enemy-pic" style="font-size: 40px;">🧟</div>
-            <div id="enemy-name">Бомж-новичок</div>
+    <div class="enemy-area">
+        <div id="enemy-name" style="font-weight: bold; margin-bottom: 5px;">Враг: Бомж 1 ур.</div>
+        <div id="enemy-pic">🧟</div>
+        <div class="hp-container">
+            <div id="hp-fill"></div>
         </div>
     </div>
 
-    <br>
-    <button onclick="attack()">Ударить врага!</button>
+    <button class="btn-hit" onclick="attack()">УДАРИТЬ!</button>
 
     <div class="shop">
-        <h3>Магазин находок</h3>
-        <button id="buy-stick" onclick="buy(5, 2)">Купить палку (5 бутылок, +2 к урону)</button>
-        <button id="buy-glass" onclick="buy(15, 5)" style="margin-left:10px;">Осколок стекла (15 бутылок, +5 к урону)</button>
-    </div>
-
-    <script>
-        let bottles = 0;
-        let level = 1;
-        let damage = 1;
-        let enemyHP = 10;
-        let maxEnemyHP = 10;
-
-        function attack() {
-            enemyHP -= damage;
-            
-            if (enemyHP <= 0) {
-                // Победа над врагом
-                bottles += Math.floor(level * 1.5);
-                level++;
-                maxEnemyHP = 10 + (level * 5);
-                enemyHP = maxEnemyHP;
-                
-                alert("Враг повержен! Ты нашел бутылки.");
-            }
-            updateUI();
-        }
-
-        function buy(cost, extraDmg) {
-            if (bottles >= cost) {
-                bottles -= cost;
-                damage += extraDmg;
-                updateUI();
-                alert("Оружие куплено!");
-            } else {
-                alert("Недостаточно бутылок! Иди дерись.");
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('money').innerText = bottles;
-            document.getElementById('lvl').innerText = level;
-            document.getElementById('dmg').innerText = damage;
-            
-            // Обновление полоски жизни врага
-            let percent = (enemyHP / maxEnemyHP) * 100;
-            document.getElementById('hp-fill').style.width = percent + "%";
-
-            // Блокировка кнопок в магазине
-            document.getElementById('buy-stick').disabled = (bottles < 5);
-            document.getElementById('buy-glass').disabled = (bottles < 15);
-        }
-
-        updateUI(); // Запуск при старте
-    </script>
-</body>
-</html>
+        <button id="buy-1" class="shop-item" onclick="buy(10, 2)">
+            <span>🦴 Гнилая кость</span> <strong>10 🍾</strong>
+        </button>
+        <button id="buy-2" class="shop-item" onclick="buy(50, 10)">
+            <span>🦯 Сломанная арматура</span> <strong>50 🍾</strong>
+        </button>
+        <button onclick="resetGame()" style="background:none; border:none; color:#555; margin-top:10px;
