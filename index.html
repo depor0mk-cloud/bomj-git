@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Бомж-РПГ: Битва за бутылки</title>
+    <style>
+        body { background: #222; color: #fff; font-family: sans-serif; text-align: center; }
+        .game-container { margin-top: 50px; }
+        
+        /* Рисуем пиксельного персонажа (упрощенно) */
+        .char-box {
+            display: inline-block;
+            width: 60px; height: 80px;
+            border: 2px solid #555;
+            background: #444; position: relative;
+            margin: 20px; vertical-align: bottom;
+        }
+        .hp-bar { width: 100%; height: 10px; background: red; position: absolute; top: -15px; }
+        .hp-fill { height: 100%; background: lime; width: 100%; transition: 0.2s; }
+
+        /* Стили кнопок */
+        button { 
+            padding: 10px 20px; font-size: 18px; cursor: pointer; 
+            background: orange; border: none; border-radius: 5px; 
+        }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .stats { font-size: 20px; color: yellow; margin-bottom: 20px; }
+        .shop { margin-top: 30px; border-top: 1px solid #555; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Бомж-РПГ: Путь Короля Свалки</h1>
+    
+    <div class="stats">
+        Уровень: <span id="lvl">1</span> | 
+        Бутылки: <span id="money">0</span> 🍾 | 
+        Урон: <span id="dmg">1</span>
+    </div>
+
+    <div class="game-container">
+        <div class="char-box">
+            <div style="font-size: 40px;">🧥</div>
+            <div>ГГ</div>
+        </div>
+
+        <span style="font-size: 30px;">VS</span>
+
+        <div class="char-box">
+            <div id="enemy-hp-bar" class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
+            <div id="enemy-pic" style="font-size: 40px;">🧟</div>
+            <div id="enemy-name">Бомж-новичок</div>
+        </div>
+    </div>
+
+    <br>
+    <button onclick="attack()">Ударить врага!</button>
+
+    <div class="shop">
+        <h3>Магазин находок</h3>
+        <button id="buy-stick" onclick="buy(5, 2)">Купить палку (5 бутылок, +2 к урону)</button>
+        <button id="buy-glass" onclick="buy(15, 5)" style="margin-left:10px;">Осколок стекла (15 бутылок, +5 к урону)</button>
+    </div>
+
+    <script>
+        let bottles = 0;
+        let level = 1;
+        let damage = 1;
+        let enemyHP = 10;
+        let maxEnemyHP = 10;
+
+        function attack() {
+            enemyHP -= damage;
+            
+            if (enemyHP <= 0) {
+                // Победа над врагом
+                bottles += Math.floor(level * 1.5);
+                level++;
+                maxEnemyHP = 10 + (level * 5);
+                enemyHP = maxEnemyHP;
+                
+                alert("Враг повержен! Ты нашел бутылки.");
+            }
+            updateUI();
+        }
+
+        function buy(cost, extraDmg) {
+            if (bottles >= cost) {
+                bottles -= cost;
+                damage += extraDmg;
+                updateUI();
+                alert("Оружие куплено!");
+            } else {
+                alert("Недостаточно бутылок! Иди дерись.");
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('money').innerText = bottles;
+            document.getElementById('lvl').innerText = level;
+            document.getElementById('dmg').innerText = damage;
+            
+            // Обновление полоски жизни врага
+            let percent = (enemyHP / maxEnemyHP) * 100;
+            document.getElementById('hp-fill').style.width = percent + "%";
+
+            // Блокировка кнопок в магазине
+            document.getElementById('buy-stick').disabled = (bottles < 5);
+            document.getElementById('buy-glass').disabled = (bottles < 15);
+        }
+
+        updateUI(); // Запуск при старте
+    </script>
+</body>
+</html>
