@@ -3,193 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Frontline: Territorial Push</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Frontline: Invasion</title>
     <style>
-        :root {
-            --grass: #354a21;
-            --player-zone: rgba(116, 185, 255, 0.2);
-            --enemy-zone: rgba(255, 118, 117, 0.2);
-        }
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        .header { height: 50px; background: #000; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #444; }
-        canvas { flex-grow: 1; background: var(--grass); display: block; }
-        .controls { height: 100px; background: #111; display: flex; justify-content: center; gap: 20px; align-items: center; }
-        .btn { width: 80px; height: 70px; background: #222; border: 1px solid #555; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
-        .btn:active { background: #444; }
-        .val { color: #f1c40f; font-weight: bold; }
+        body { margin: 0; background: #4ec41b; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        .ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; pointer-events: none; }
+        canvas { display: block; }
+        .cheat-panel { position: absolute; bottom: 10px; right: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .btn { padding: 10px; background: #222; color: #0f0; border: 1px solid #0f0; cursor: pointer; font-size: 12px; }
+        .win-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: gold; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>SCRAP: <span class="val" id="scrap">100</span></div>
-        <div>PARTS: <span class="val" id="parts">0</span></div>
+    <div class="ui">
+        Производство: <span id="prodStatus">АКТИВНО</span><br>
+        Юнитов в бою: <span id="unitCount">0</span>
+    </div>
+
+    <div class="cheat-panel">
+        <button class="btn" onclick="spawn('tank', 'player')">+ ТАНК (ЧИТ)</button>
+        <button class="btn" onclick="spawn('infantry', 'enemy')">+ ВРАГ (ЧИТ)</button>
+        <button class="btn" onclick="frontline.fill(canvas.height/2)">СБРОС ФРОНТА</button>
+    </div>
+
+    <div id="winScreen" class="win-screen">
+        <h1 id="winText">ПОБЕДА!</h1>
+        <button onclick="location.reload()">ИГРАТЬ СНОВА</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <div class="controls">
-        <div class="btn" onclick="spawn('infantry')"><b>INF</b><span>10</span></div>
-        <div class="btn" onclick="spawn('tank')"><b>TANK</b><span>40</span></div>
-        <div id="aiBtn" class="btn" onclick="toggleAI()" style="border-color: #27ae60;"><b>AUTO</b><span id="aiStatus">OFF</span></div>
-    </div>
-
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let scrap = 100;
-    let parts = 0;
-    let isAI = false;
-
+    
     function resize() {
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 150;
+        canvas.height = window.innerHeight;
     }
     window.onresize = resize;
     resize();
 
-    const segmentCount = 15; // Больше сегментов для плавности
-    let frontlineY = Array(segmentCount + 1).fill(canvas.height / 2);
+    const lineRes = 25;
+    let frontline = Array(lineRes + 1).fill(canvas.height / 2);
     let units = [];
-    let projectiles = [];
+    let helicopters = [];
 
     class Unit {
-        constructor(side, type) {
+        constructor(side, type, x, y) {
             this.side = side;
             this.type = type;
-            this.x = canvas.width / 2 + (Math.random() * 60 - 30);
-            this.y = side === 'player' ? canvas.height - 30 : 30;
-            this.targetX = Math.random() * canvas.width;
-            this.hp = type === 'infantry' ? 50 : 250;
-            this.currentHp = this.hp;
+            this.x = x || canvas.width / 2;
+            this.y = y || (side === 'player' ? canvas.height - 60 : 60);
+            this.hp = type === 'infantry' ? 40 : 180;
             this.speed = type === 'infantry' ? 1.2 : 0.6;
-            this.range = type === 'infantry' ? 80 : 130;
-            this.damage = type === 'infantry' ? 5 : 15;
-            this.size = type === 'infantry' ? 5 : 12;
+            this.power = type === 'infantry' ? 0.2 : 0.6;
+            this.targetX = Math.random() * canvas.width;
         }
 
         update() {
-            let segIndex = Math.floor((this.x / canvas.width) * segmentCount);
-            segIndex = Math.max(0, Math.min(segmentCount, segIndex));
-            let currentLineY = frontlineY[segIndex];
+            let seg = Math.floor((this.x / canvas.width) * lineRes);
+            seg = Math.max(0, Math.min(lineRes, seg));
+            let lineY = frontline[seg];
 
-            // Проверка: находится ли юнит у линии фронта
-            let atFront = (this.side === 'player' && this.y <= currentLineY + 5) || 
-                          (this.side === 'enemy' && this.y >= currentLineY - 5);
+            // Проверка победы (если фронт дошел до столицы)
+            if (frontline[seg] < 60) endGame("ИГРОК ПОБЕДИЛ!");
+            if (frontline[seg] > canvas.height - 60) endGame("ВРАГ ПОБЕДИЛ!");
 
-            // Поиск врага
-            let enemies = units.filter(u => u.side !== this.side);
-            let target = null;
-            for(let e of enemies) {
-                let d = Math.hypot(this.x - e.x, this.y - e.y);
-                if(d < this.range) { target = e; break; }
-            }
-
-            // Движение
-            if (!atFront || target) {
-                // Если не у фронта — идем к нему
-                let angle = Math.atan2((this.side === 'player' ? -1 : 1), (this.targetX - this.x) / 150);
-                this.x += Math.cos(angle) * this.speed * 0.5;
-                this.y += Math.sin(angle) * (target ? this.speed * 0.2 : this.speed);
+            let enemies = units.filter(u => u.side !== this.side && Math.hypot(u.x - this.x, u.y - this.y) < 40);
+            
+            if (enemies.length > 0) {
+                enemies[0].hp -= 1;
+                this.hp -= 0.5;
             } else {
-                // Если у фронта и нет врага — толкаем линию!
-                if(this.side === 'player' && frontlineY[segIndex] > 50) {
-                    frontlineY[segIndex] -= (this.type === 'tank' ? 0.3 : 0.1);
-                    this.y = frontlineY[segIndex] + 2; // Прилипаем к линии
-                } else if(this.side === 'enemy' && frontlineY[segIndex] < canvas.height - 50) {
-                    frontlineY[segIndex] += (this.type === 'tank' ? 0.3 : 0.1);
-                    this.y = frontlineY[segIndex] - 2;
+                let distY = Math.abs(this.y - lineY);
+                if (distY > 10) {
+                    this.y += (this.side === 'player' ? -1 : 1) * this.speed;
+                    this.x += (this.targetX - this.x) * 0.01;
+                } else {
+                    frontline[seg] += (this.side === 'player' ? -this.power : this.power);
+                    this.y = frontline[seg] + (this.side === 'player' ? 5 : -5);
                 }
             }
-
-            // Стрельба
-            if(target && Math.random() < 0.05) {
-                projectiles.push({x: this.x, y: this.y, tx: target.x, ty: target.y, side: this.side});
-                target.currentHp -= this.damage / 10;
-            }
-
-            // Интеллектуальное перестроение (ищем, где линия провалена)
-            if(Math.random() < 0.01) {
-                let worstSeg = 0;
-                let worstVal = this.side === 'player' ? -1 : 9999;
-                for(let i=0; i<segmentCount; i++) {
-                    if(this.side === 'player' && frontlineY[i] > worstVal) { worstVal = frontlineY[i]; worstSeg = i; }
-                    if(this.side === 'enemy' && frontlineY[i] < worstVal) { worstVal = frontlineY[i]; worstSeg = i; }
-                }
-                this.targetX = (worstSeg * (canvas.width / segmentCount)) + (canvas.width / segmentCount / 2);
-            }
-
-            return this.currentHp <= 0;
+            return this.hp <= 0;
         }
 
         draw() {
-            ctx.fillStyle = this.side === 'player' ? '#74b9ff' : '#ff7675';
+            ctx.fillStyle = this.side === 'player' ? '#0055ff' : '#ff0000';
             ctx.beginPath();
-            if(this.type === 'infantry') ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-            else ctx.fillRect(this.x - this.size, this.y - this.size/2, this.size*2, this.size);
+            if(this.type === 'infantry') ctx.arc(this.x, this.y, 6, 0, Math.PI*2);
+            else ctx.fillRect(this.x-10, this.y-5, 20, 10);
             ctx.fill();
-            
-            // Полоска здоровья
-            ctx.fillStyle = 'red';
-            ctx.fillRect(this.x - 10, this.y - 15, 20, 2);
-            ctx.fillStyle = '#2ecc71';
-            ctx.fillRect(this.x - 10, this.y - 15, (this.currentHp/this.hp)*20, 2);
+            ctx.strokeStyle = 'black'; ctx.stroke();
         }
     }
 
-    function spawn(type, side='player') {
-        let cost = type === 'infantry' ? 10 : 40;
-        if(side === 'player') { if(scrap < cost) return; scrap -= cost; }
+    class Helicopter {
+        constructor(side) {
+            this.side = side;
+            this.x = side === 'player' ? -50 : canvas.width + 50;
+            this.y = Math.random() * (canvas.height * 0.4) + (side === 'player' ? canvas.height*0.5 : 100);
+            this.targetX = canvas.width / 2 + (Math.random()*200 - 100);
+            this.hasDropped = false;
+        }
+
+        update() {
+            this.x += (this.side === 'player' ? 3 : -3);
+            // Высадка десанта в центре карты
+            if (!this.hasDropped && Math.abs(this.x - this.targetX) < 10) {
+                let count = Math.floor(Math.random() * 3) + 1;
+                for(let i=0; i<count; i++) {
+                    units.push(new Unit(this.side, 'infantry', this.x + (i*15), this.y));
+                }
+                this.hasDropped = true;
+            }
+            return (this.x > canvas.width + 100 || this.x < -100);
+        }
+
+        draw() {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(this.x - 20, this.y - 5, 40, 10); // Корпус
+            ctx.fillRect(this.x - 25, this.y - 12, 50, 2); // Лопасти
+        }
+    }
+
+    function spawn(type, side) {
         units.push(new Unit(side, type));
     }
 
-    function toggleAI() { isAI = !isAI; document.getElementById('aiStatus').innerText = isAI ? "ON" : "OFF"; }
+    function endGame(text) {
+        document.getElementById('winScreen').style.display = 'flex';
+        document.getElementById('winText').innerText = text;
+    }
 
-    setInterval(() => {
-        spawn(Math.random() > 0.7 ? 'tank' : 'infantry', 'enemy');
-        if(isAI && scrap >= 10) spawn(scrap > 50 ? 'tank' : 'infantry', 'player');
-    }, 2500);
+    // Авто-производство (2-5 сек)
+    function startFactories() {
+        setInterval(() => spawn(Math.random() > 0.8 ? 'tank' : 'infantry', 'player'), 3000);
+        setInterval(() => spawn(Math.random() > 0.8 ? 'tank' : 'infantry', 'enemy'), 3500);
+        // Вертолеты (раз в 10 сек)
+        setInterval(() => helicopters.push(new Helicopter('player')), 10000);
+        setInterval(() => helicopters.push(new Helicopter('enemy')), 12000);
+    }
 
     function gameLoop() {
-        ctx.fillStyle = '#354a21'; // Темная трава
+        ctx.fillStyle = '#4ec41b';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Отрисовка зон контроля
-        ctx.fillStyle = 'rgba(116, 185, 255, 0.1)'; // Игрок
+        // Столицы (Звезды/Круги)
+        ctx.fillStyle = '#ffff00';
         ctx.beginPath();
-        ctx.moveTo(0, canvas.height);
-        for(let i=0; i<=segmentCount; i++) ctx.lineTo(i*(canvas.width/segmentCount), frontlineY[i]);
-        ctx.lineTo(canvas.width, canvas.height);
+        ctx.arc(canvas.width / 2, 40, 30, 0, Math.PI*2); // Враг
+        ctx.arc(canvas.width / 2, canvas.height - 40, 30, 0, Math.PI*2); // Игрок
         ctx.fill();
 
-        // Линия фронта (белый пунктир)
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 3;
-        ctx.setLineDash([10, 5]);
-        ctx.beginPath();
-        ctx.moveTo(0, frontlineY[0]);
-        for(let i=1; i<=segmentCount; i++) ctx.lineTo(i*(canvas.width/segmentCount), frontlineY[i]);
+        // Фронт
+        ctx.strokeStyle = 'black'; ctx.lineWidth = 4; ctx.beginPath();
+        ctx.moveTo(0, frontline[0]);
+        for(let i=1; i<=lineRes; i++) ctx.lineTo(i*(canvas.width/lineRes), frontline[i]);
         ctx.stroke();
-        ctx.setLineDash([]);
 
-        units = units.filter(u => {
-            let dead = u.update();
-            if(dead && u.side === 'enemy' && Math.random() < 0.25) parts++;
-            u.draw();
-            return !dead;
-        });
+        units = units.filter(u => { let d = u.update(); u.draw(); return !d; });
+        helicopters = helicopters.filter(h => { let off = h.update(); h.draw(); return !off; });
 
-        projectiles = projectiles.filter(p => {
-            ctx.strokeStyle = p.side === 'player' ? '#f1c40f' : '#fff';
-            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.tx, p.ty); ctx.stroke();
-            return false;
-        });
-
-        document.getElementById('scrap').innerText = Math.floor(scrap += 0.07);
-        document.getElementById('parts').innerText = parts;
+        document.getElementById('unitCount').innerText = units.length;
         requestAnimationFrame(gameLoop);
     }
+
+    startFactories();
     gameLoop();
 </script>
 </body>
